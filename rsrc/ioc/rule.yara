@@ -1,41 +1,17 @@
-rule sliver_binary_native {
-
+rule sliver_client : c2 implant
+{
     meta:
-        author = "Kev Breen @kevthehermit"
-        description = "Detects unmodified Sliver implant generated for Windows, Linux or MacOS"
-
-    strings: 
-        $sliverpb = "sliverpb"
-        $bishop_git = "github.com/bishopfox/"
-        $encryption = "chacha20poly1305"
-
-
+        description = "Sliver C2 Implant"
+        author = "Wazuh team"
+        url = "https://github.com/BishopFox/sliver"
+    strings:
+        $s1 = "sliverpb"
+        $s2 = "/sliver/"
+        $s3 = "github.com/bishopfox/sliver/"
+        $p1 = {66 81 ?? 77 67}
+        $p2 = { 81 ?? 68 74 74 70 [2-32] 80 ?? 04 73 }
+        $p3 = { 66 81 ?? 64 6E [2-20] 80 ?? 02 73 }
+        $p4 = {  81 ?? 6D 74 6C 73  }
     condition:
-        // This detects Go Headers for PE, ELF, Macho
-        (
-			(uint16(0) == 0x5a4d) or 
-			(uint32(0)==0x464c457f) or 
-			(uint32(0) == 0xfeedfacf) or 
-			(uint32(0) == 0xcffaedfe) or 
-			(uint32(0) == 0xfeedface) or 
-			(uint32(0) == 0xcefaedfe) 
-		)
-        // String matches
-        and $sliverpb
-        and $bishop_git
-        and $encryption
-}
-
-rule sliver_memory {
-
-    meta:
-        author = "Kev Breen @kevthehermit"
-        description = "Detects Sliver running in memory"
-
-    strings: 
-        $str1 = "sliverpb"
-
-
-    condition:
-        all of them
+        2 of ($p*) or any of ($s1,$s2,$s3) and filesize < 50MB
 }
